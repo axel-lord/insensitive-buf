@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-//! Create with utilities for case insensitive filenames.
+#![doc = include_str!("../README.md")]
 
 pub use self::{insensitive_display::InsensitiveDisplay, insensitive_ref::Insensitive};
 
