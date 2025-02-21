@@ -9,9 +9,9 @@ use ::core::{
     ops::{Deref, DerefMut},
 };
 
+use ::tinyvec::TinyVec;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::Insensitive;
 
@@ -26,12 +26,14 @@ const BUFSIZE: usize = size_of::<usize>() * 3;
     feature = "serde",
     serde(from = "alloc::vec::Vec<u8>", into = "alloc::vec::Vec<u8>")
 )]
-pub struct InsensitiveBuf(SmallVec<[u8; BUFSIZE]>);
+pub struct InsensitiveBuf(TinyVec<[u8; BUFSIZE]>);
 
 impl InsensitiveBuf {
     /// Construct a new [InsensitiveBuf].
     pub fn new<S: AsRef<[u8]> + ?Sized>(s: &S) -> Self {
-        Self(SmallVec::from_slice(s.as_ref()))
+        let mut arr = TinyVec::new();
+        arr.extend_from_slice(s.as_ref());
+        Self(arr)
     }
 
     /// Extend with the contents of a &[u8] slice.
@@ -74,13 +76,13 @@ impl From<&[u8]> for InsensitiveBuf {
 
 impl From<alloc::vec::Vec<u8>> for InsensitiveBuf {
     fn from(value: alloc::vec::Vec<u8>) -> Self {
-        Self(value.into())
+        Self::new(&value)
     }
 }
 
 impl From<InsensitiveBuf> for alloc::vec::Vec<u8> {
     fn from(value: InsensitiveBuf) -> Self {
-        value.0.into_vec()
+        value.as_bytes().to_vec()
     }
 }
 
@@ -180,7 +182,7 @@ impl Extend<u8> for InsensitiveBuf {
 
 impl FromIterator<u8> for InsensitiveBuf {
     fn from_iter<T: IntoIterator<Item = u8>>(iter: T) -> Self {
-        Self(SmallVec::from_iter(iter))
+        Self(TinyVec::from_iter(iter))
     }
 }
 
